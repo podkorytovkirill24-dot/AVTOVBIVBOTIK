@@ -1,4 +1,4 @@
-async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+﻿async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     state = get_state(context)
     if not state:
         return
@@ -10,7 +10,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         numbers = filter_kz_numbers(extract_numbers(text))
         if not numbers:
             conn.close()
-            await update.message.reply_text(f"Не вижу KZ номера.\n\n{SUBMIT_RULES_TEXT}")
+            await update.message.reply_text(f"РќРµ РІРёР¶Сѓ KZ РЅРѕРјРµСЂР°.\n\n{SUBMIT_RULES_TEXT}")
             return
         tariff_id = state["data"].get("tariff_id")
         dept_id = state["data"].get("department_id")
@@ -18,13 +18,13 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         if not reception_chat_id:
             conn.close()
             clear_state(context)
-            await update.message.reply_text("Приемка не выбрана. Откройте меню и выберите тариф заново.")
+            await update.message.reply_text("РџСЂРёРµРјРєР° РЅРµ РІС‹Р±СЂР°РЅР°. РћС‚РєСЂРѕР№С‚Рµ РјРµРЅСЋ Рё РІС‹Р±РµСЂРёС‚Рµ С‚Р°СЂРёС„ Р·Р°РЅРѕРІРѕ.")
             return
         allow_repeat = get_config_bool(conn, "allow_repeat", True)
         limit_per_day = get_config_int(conn, "limit_per_day", 0)
         if get_config_bool(conn, "stop_work"):
             conn.close()
-            await update.message.reply_text("⛔ STOP-WORK\nПриемка временно на паузе. Попробуйте позже.")
+            await update.message.reply_text("в›” STOP-WORK\nРџСЂРёРµРјРєР° РІСЂРµРјРµРЅРЅРѕ РЅР° РїР°СѓР·Рµ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.")
             clear_state(context)
             return
         if limit_per_day > 0:
@@ -38,7 +38,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             ).fetchone()["cnt"]
             if cnt + len(numbers) > limit_per_day:
                 conn.close()
-                await update.message.reply_text(f"Лимит сдачи на сегодня: {limit_per_day}.")
+                await update.message.reply_text(f"Р›РёРјРёС‚ СЃРґР°С‡Рё РЅР° СЃРµРіРѕРґРЅСЏ: {limit_per_day}.")
                 clear_state(context)
                 return
 
@@ -87,7 +87,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         conn.close()
         clear_state(context)
         if not accepted:
-            await update.message.reply_text("Номера не приняты (повторные запрещены).")
+            await update.message.reply_text("РќРѕРјРµСЂР° РЅРµ РїСЂРёРЅСЏС‚С‹ (РїРѕРІС‚РѕСЂРЅС‹Рµ Р·Р°РїСЂРµС‰РµРЅС‹).")
             return
         await update.message.reply_text(build_accept_text(accepted, pending_before))
         return
@@ -95,11 +95,11 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
     if name == "admin_tariff_add_name":
         if not text:
             conn.close()
-            await update.message.reply_text("Введите название тарифа.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ С‚Р°СЂРёС„Р°.")
             return
         set_state(context, "admin_tariff_add_price", title=text)
         conn.close()
-        await update.message.reply_text("Введите цену (например 8 или 8.5):")
+        await update.message.reply_text("Р’РІРµРґРёС‚Рµ С†РµРЅСѓ (РЅР°РїСЂРёРјРµСЂ 8 РёР»Рё 8.5):")
         return
 
     if name == "admin_tariff_add_price":
@@ -107,17 +107,17 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         if not title:
             conn.close()
             clear_state(context)
-            await update.message.reply_text("Название не найдено. Начните добавление тарифа заново.")
+            await update.message.reply_text("РќР°Р·РІР°РЅРёРµ РЅРµ РЅР°Р№РґРµРЅРѕ. РќР°С‡РЅРёС‚Рµ РґРѕР±Р°РІР»РµРЅРёРµ С‚Р°СЂРёС„Р° Р·Р°РЅРѕРІРѕ.")
             return
         try:
             price = float(text.replace(",", "."))
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите цену числом (например 8 или 8.5).")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ С†РµРЅСѓ С‡РёСЃР»РѕРј (РЅР°РїСЂРёРјРµСЂ 8 РёР»Рё 8.5).")
             return
         set_state(context, "admin_tariff_add_duration", title=title, price=price)
         conn.close()
-        await update.message.reply_text("Введите длительность в минутах:")
+        await update.message.reply_text("Р’РІРµРґРёС‚Рµ РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ РІ РјРёРЅСѓС‚Р°С…:")
         return
 
     if name == "admin_tariff_add_duration":
@@ -126,13 +126,13 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         if not title:
             conn.close()
             clear_state(context)
-            await update.message.reply_text("Данные тарифа потеряны. Начните добавление тарифа заново.")
+            await update.message.reply_text("Р”Р°РЅРЅС‹Рµ С‚Р°СЂРёС„Р° РїРѕС‚РµСЂСЏРЅС‹. РќР°С‡РЅРёС‚Рµ РґРѕР±Р°РІР»РµРЅРёРµ С‚Р°СЂРёС„Р° Р·Р°РЅРѕРІРѕ.")
             return
         try:
             duration = int(text)
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите длительность числом (в минутах).")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ С‡РёСЃР»РѕРј (РІ РјРёРЅСѓС‚Р°С…).")
             return
         conn.execute(
             "INSERT INTO tariffs (name, price, duration_min, priority) VALUES (?, ?, ?, 0)",
@@ -141,7 +141,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Тариф добавлен.")
+        await update.message.reply_text("РўР°СЂРёС„ РґРѕР±Р°РІР»РµРЅ.")
         return
 
     if name == "admin_tariff_edit":
@@ -149,7 +149,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         title, price, duration = parse_tariff_text(text)
         if not title:
             conn.close()
-            await update.message.reply_text("Формат: Название | цена | минуты")
+            await update.message.reply_text("Р¤РѕСЂРјР°С‚: РќР°Р·РІР°РЅРёРµ | С†РµРЅР° | РјРёРЅСѓС‚С‹")
             return
         conn.execute(
             "UPDATE tariffs SET name = ?, price = ?, duration_min = ? WHERE id = ?",
@@ -158,7 +158,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Тариф обновлен.")
+        await update.message.reply_text("РўР°СЂРёС„ РѕР±РЅРѕРІР»РµРЅ.")
         return
 
     if name == "admin_tariff_delete":
@@ -166,38 +166,38 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             tariff_id = int(text)
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите ID тарифа.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ ID С‚Р°СЂРёС„Р°.")
             return
         conn.execute("DELETE FROM tariffs WHERE id = ?", (tariff_id,))
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Тариф удален.")
+        await update.message.reply_text("РўР°СЂРёС„ СѓРґР°Р»РµРЅ.")
         return
 
     if name == "admin_department_add":
         if not text:
             conn.close()
-            await update.message.reply_text("Введите название приемки.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ РїСЂРёРµРјРєРё.")
             return
         conn.execute("INSERT INTO departments (name) VALUES (?)", (text,))
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Приемка добавлена.")
+        await update.message.reply_text("РџСЂРёРµРјРєР° РґРѕР±Р°РІР»РµРЅР°.")
         return
 
     if name == "admin_department_edit":
         dept_id = state["data"].get("department_id")
         if not text:
             conn.close()
-            await update.message.reply_text("Введите новое название.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ РЅРѕРІРѕРµ РЅР°Р·РІР°РЅРёРµ.")
             return
         conn.execute("UPDATE departments SET name = ? WHERE id = ?", (text, dept_id))
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Приемка обновлена.")
+        await update.message.reply_text("РџСЂРёРµРјРєР° РѕР±РЅРѕРІР»РµРЅР°.")
         return
 
     if name == "admin_department_delete":
@@ -205,38 +205,38 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             dept_id = int(text)
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите ID приемки.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ ID РїСЂРёРµРјРєРё.")
             return
         conn.execute("DELETE FROM departments WHERE id = ?", (dept_id,))
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Приемка удалена.")
+        await update.message.reply_text("РџСЂРёРµРјРєР° СѓРґР°Р»РµРЅР°.")
         return
 
     if name == "admin_office_add":
         if not text:
             conn.close()
-            await update.message.reply_text("Введите название офиса.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ РѕС„РёСЃР°.")
             return
         conn.execute("INSERT INTO offices (name) VALUES (?)", (text,))
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Офис добавлен.")
+        await update.message.reply_text("РћС„РёСЃ РґРѕР±Р°РІР»РµРЅ.")
         return
 
     if name == "admin_office_edit":
         office_id = state["data"].get("office_id")
         if not text:
             conn.close()
-            await update.message.reply_text("Введите новое название.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ РЅРѕРІРѕРµ РЅР°Р·РІР°РЅРёРµ.")
             return
         conn.execute("UPDATE offices SET name = ? WHERE id = ?", (text, office_id))
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Офис обновлен.")
+        await update.message.reply_text("РћС„РёСЃ РѕР±РЅРѕРІР»РµРЅ.")
         return
 
     if name == "admin_office_delete":
@@ -244,13 +244,13 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             office_id = int(text)
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите ID офиса.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ ID РѕС„РёСЃР°.")
             return
         conn.execute("DELETE FROM offices WHERE id = ?", (office_id,))
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Офис удален.")
+        await update.message.reply_text("РћС„РёСЃ СѓРґР°Р»РµРЅ.")
         return
 
     if name == "admin_set_priority":
@@ -259,13 +259,13 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             priority = int(text)
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите число.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ.")
             return
         conn.execute("UPDATE tariffs SET priority = ? WHERE id = ?", (priority, tariff_id))
         conn.commit()
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Приоритет обновлен.")
+        await update.message.reply_text("РџСЂРёРѕСЂРёС‚РµС‚ РѕР±РЅРѕРІР»РµРЅ.")
         return
 
     if name == "admin_limit":
@@ -273,12 +273,12 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             limit = int(text)
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите число.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ.")
             return
         set_config(conn, "limit_per_day", str(limit))
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Лимит обновлен.")
+        await update.message.reply_text("Р›РёРјРёС‚ РѕР±РЅРѕРІР»РµРЅ.")
         return
 
     if name == "admin_i_am_here":
@@ -292,9 +292,9 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         conn.close()
         clear_state(context)
         if minutes > 0:
-            await update.message.reply_text(f"Функция «Я тут» включена. Интервал: {minutes} мин.")
+            await update.message.reply_text(f"Р¤СѓРЅРєС†РёСЏ В«РЇ С‚СѓС‚В» РІРєР»СЋС‡РµРЅР°. РРЅС‚РµСЂРІР°Р»: {minutes} РјРёРЅ.")
         else:
-            await update.message.reply_text("Функция «Я тут» выключена.")
+            await update.message.reply_text("Р¤СѓРЅРєС†РёСЏ В«РЇ С‚СѓС‚В» РІС‹РєР»СЋС‡РµРЅР°.")
         return
 
 
@@ -304,16 +304,16 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             minutes = int(text)
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите число минут.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РјРёРЅСѓС‚.")
             return
         set_config(conn, "auto_slip_minutes", str(minutes))
         set_config(conn, "auto_slip_on", "1" if minutes > 0 else "0")
         conn.close()
         clear_state(context)
         if minutes > 0:
-            await update.message.reply_text(f"Авто-слёт включен. Интервал: {minutes} мин.")
+            await update.message.reply_text(f"РђРІС‚Рѕ-СЃР»С‘С‚ РІРєР»СЋС‡РµРЅ. РРЅС‚РµСЂРІР°Р»: {minutes} РјРёРЅ.")
         else:
-            await update.message.reply_text("Авто-слёт выключен.")
+            await update.message.reply_text("РђРІС‚Рѕ-СЃР»С‘С‚ РІС‹РєР»СЋС‡РµРЅ.")
         return
 
     if name == "admin_lunch_text":
@@ -324,19 +324,19 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         lunch_on = get_config_bool(conn, "lunch_on")
         conn.close()
         clear_state(context)
-        status = "ВКЛ" if lunch_on else "ВЫКЛ"
+        status = "Р’РљР›" if lunch_on else "Р’Р«РљР›"
         keyboard = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("✏ Редактировать текст", callback_data="adm:lunch:edit")],
+                [InlineKeyboardButton("вњЏ Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ С‚РµРєСЃС‚", callback_data="adm:lunch:edit")],
                 [
-                    InlineKeyboardButton("✅ Включить", callback_data="adm:lunch:on"),
-                    InlineKeyboardButton("⛔ Выключить", callback_data="adm:lunch:off"),
+                    InlineKeyboardButton("вњ… Р’РєР»СЋС‡РёС‚СЊ", callback_data="adm:lunch:on"),
+                    InlineKeyboardButton("в›” Р’С‹РєР»СЋС‡РёС‚СЊ", callback_data="adm:lunch:off"),
                 ],
-                [InlineKeyboardButton("⬅ Назад", callback_data="adm:settings")],
+                [InlineKeyboardButton("в¬… РќР°Р·Р°Рґ", callback_data="adm:settings")],
             ]
         )
         await update.message.reply_text(
-            f"🍽 Расписание обедов\nСтатус: {status}\n\n{text}",
+            f"рџЌЅ Р Р°СЃРїРёСЃР°РЅРёРµ РѕР±РµРґРѕРІ\nРЎС‚Р°С‚СѓСЃ: {status}\n\n{text}",
             reply_markup=keyboard,
         )
         return
@@ -345,35 +345,35 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         admin_id = resolve_user_id_input(conn, text)
         if admin_id is None:
             conn.close()
-            await update.message.reply_text("Введите ЮЗ (@username) или ID пользователя.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ Р®Р— (@username) РёР»Рё ID РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.")
             return
         conn.execute("INSERT INTO admins (user_id) VALUES (?) ON CONFLICT(user_id) DO NOTHING", (admin_id,))
         conn.commit()
         conn.close()
         log_admin_action(update.effective_user.id, update.effective_user.username, "add_admin", f"target_id={admin_id}")
         clear_state(context)
-        await update.message.reply_text("Админ добавлен.")
+        await update.message.reply_text("РђРґРјРёРЅ РґРѕР±Р°РІР»РµРЅ.")
         return
 
     if name == "admin_remove_admin":
         admin_id = resolve_user_id_input(conn, text)
         if admin_id is None:
             conn.close()
-            await update.message.reply_text("Введите ЮЗ (@username) или ID пользователя.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ Р®Р— (@username) РёР»Рё ID РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.")
             return
         conn.execute("DELETE FROM admins WHERE user_id = ?", (admin_id,))
         conn.commit()
         conn.close()
         log_admin_action(update.effective_user.id, update.effective_user.username, "remove_admin", f"target_id={admin_id}")
         clear_state(context)
-        await update.message.reply_text("Админ удален.")
+        await update.message.reply_text("РђРґРјРёРЅ СѓРґР°Р»РµРЅ.")
         return
 
     if name == "admin_search_number":
         phone = "".join(extract_numbers(text))
         if not phone:
             conn.close()
-            await update.message.reply_text("Введите номер.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ.")
             return
         rows = conn.execute(
             "SELECT q.phone, q.status, q.created_at, q.completed_at, t.name AS tariff "
@@ -384,9 +384,9 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         conn.close()
         clear_state(context)
         if not rows:
-            await update.message.reply_text("Ничего не найдено.")
+            await update.message.reply_text("РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ.")
             return
-        lines = ["🔍 Результаты поиска:"]
+        lines = ["рџ”Ќ Р РµР·СѓР»СЊС‚Р°С‚С‹ РїРѕРёСЃРєР°:"]
         for r in rows:
             lines.append(
                 f"{r['phone']} | {status_human(r['status'])} | {r['tariff']} | {format_ts(r['created_at'])}"
@@ -397,7 +397,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
     if name == "admin_broadcast":
         if not text and not update.message.photo:
             conn.close()
-            await update.message.reply_text("Отправьте текст или фото.")
+            await update.message.reply_text("РћС‚РїСЂР°РІСЊС‚Рµ С‚РµРєСЃС‚ РёР»Рё С„РѕС‚Рѕ.")
             return
         photo_id = update.message.photo[-1].file_id if update.message.photo else None
         users = conn.execute("SELECT user_id FROM users WHERE is_blocked = 0").fetchall()
@@ -413,7 +413,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             except Exception:
                 continue
         clear_state(context)
-        await update.message.reply_text(f"Рассылка завершена. Отправлено: {sent}.")
+        await update.message.reply_text(f"Р Р°СЃСЃС‹Р»РєР° Р·Р°РІРµСЂС€РµРЅР°. РћС‚РїСЂР°РІР»РµРЅРѕ: {sent}.")
         return
 
     if name == "support_message":
@@ -430,17 +430,17 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
                 await context.bot.send_message(
                     chat_id=admin["user_id"],
                     text=(
-                        f"🆘 Новое сообщение в поддержке #{ticket_id} "
-                        f"от {format_user_label(update.effective_user.id, update.effective_user.username)}:\n{text}"
+                        f"рџ† РќРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ РІ РїРѕРґРґРµСЂР¶РєРµ #{ticket_id} "
+                        f"РѕС‚ {format_user_label(update.effective_user.id, update.effective_user.username)}:\n{text}"
                     ),
                     reply_markup=InlineKeyboardMarkup(
-                        [[InlineKeyboardButton("Ответить", callback_data=f"adm:support_reply:{ticket_id}")]]
+                        [[InlineKeyboardButton("РћС‚РІРµС‚РёС‚СЊ", callback_data=f"adm:support_reply:{ticket_id}")]]
                     ),
                 )
             except Exception:
                 continue
         clear_state(context)
-        await update.message.reply_text("Сообщение отправлено в поддержку.")
+        await update.message.reply_text("РЎРѕРѕР±С‰РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ РІ РїРѕРґРґРµСЂР¶РєСѓ.")
         return
 
     if name == "admin_support_reply":
@@ -452,7 +452,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         if not ticket:
             conn.close()
             clear_state(context)
-            await update.message.reply_text("Тикет не найден.")
+            await update.message.reply_text("РўРёРєРµС‚ РЅРµ РЅР°Р№РґРµРЅ.")
             return
         conn.execute(
             "INSERT INTO support_messages (ticket_id, sender_id, text, created_at) VALUES (?, ?, ?, ?)",
@@ -463,12 +463,12 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         try:
             await context.bot.send_message(
                 chat_id=ticket["user_id"],
-                text=f"Ответ поддержки #{ticket_id}:\n{text}",
+                text=f"РћС‚РІРµС‚ РїРѕРґРґРµСЂР¶РєРё #{ticket_id}:\n{text}",
             )
         except Exception:
             pass
         clear_state(context)
-        await update.message.reply_text("Ответ отправлен.")
+        await update.message.reply_text("РћС‚РІРµС‚ РѕС‚РїСЂР°РІР»РµРЅ.")
         return
 
     if name == "user_withdraw":
@@ -476,12 +476,12 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             amount = float(text.replace(",", "."))
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите сумму.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ.")
             return
         balance = calculate_user_balance(conn, update.effective_user.id)
         if amount <= 0 or amount > balance:
             conn.close()
-            await update.message.reply_text(f"Недостаточно средств. Доступно: ${balance:.2f}")
+            await update.message.reply_text(f"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ СЃСЂРµРґСЃС‚РІ. Р”РѕСЃС‚СѓРїРЅРѕ: ${balance:.2f}")
             return
         conn.execute(
             "INSERT INTO withdrawal_requests (user_id, amount, status, created_at) "
@@ -497,34 +497,34 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
                 await context.bot.send_message(
                     chat_id=admin["user_id"],
                     text=(
-                        "💰 Новый запрос вывода:\n"
+                        "рџ’° РќРѕРІС‹Р№ Р·Р°РїСЂРѕСЃ РІС‹РІРѕРґР°:\n"
                         f"{format_user_label(update.effective_user.id, update.effective_user.username)}\n"
-                        f"Сумма: ${amount:.2f}"
+                        f"РЎСѓРјРјР°: ${amount:.2f}"
                     ),
                     reply_markup=InlineKeyboardMarkup(
                         [
-                            [InlineKeyboardButton(f"✅ Оплачено #{req_id}", callback_data=f"adm:withdraw:pay:{req_id}")],
-                            [InlineKeyboardButton(f"❌ Ошибка #{req_id}", callback_data=f"adm:withdraw:error:{req_id}")],
+                            [InlineKeyboardButton(f"вњ… РћРїР»Р°С‡РµРЅРѕ #{req_id}", callback_data=f"adm:withdraw:pay:{req_id}")],
+                            [InlineKeyboardButton(f"вќЊ РћС€РёР±РєР° #{req_id}", callback_data=f"adm:withdraw:error:{req_id}")],
                         ]
                     ),
                 )
             except Exception:
                 continue
         clear_state(context)
-        await update.message.reply_text("Запрос на вывод отправлен.")
+        await update.message.reply_text("Р—Р°РїСЂРѕСЃ РЅР° РІС‹РІРѕРґ РѕС‚РїСЂР°РІР»РµРЅ.")
         return
 
     if name == "admin_payout_user":
         user_id = resolve_user_id_input(conn, text)
         if user_id is None:
             conn.close()
-            await update.message.reply_text("Пользователь не найден. Введите @username или ID.")
+            await update.message.reply_text("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ. Р’РІРµРґРёС‚Рµ @username РёР»Рё ID.")
             return
         row = conn.execute("SELECT username FROM users WHERE user_id = ?", (user_id,)).fetchone()
         label = format_user_label(user_id, row["username"] if row else None)
         set_state(context, "admin_payout_amount", user_id=user_id)
         conn.close()
-        await update.message.reply_text(f"Введите сумму выплаты для {label}:")
+        await update.message.reply_text(f"Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ РІС‹РїР»Р°С‚С‹ РґР»СЏ {label}:")
         return
 
     if name == "admin_payout_amount":
@@ -532,17 +532,17 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         if not user_id:
             conn.close()
             clear_state(context)
-            await update.message.reply_text("Не найден пользователь. Начните заново.")
+            await update.message.reply_text("РќРµ РЅР°Р№РґРµРЅ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ. РќР°С‡РЅРёС‚Рµ Р·Р°РЅРѕРІРѕ.")
             return
         try:
             amount = float(text.replace(",", "."))
         except ValueError:
             conn.close()
-            await update.message.reply_text("Введите сумму числом (например 110 или 110.5).")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ С‡РёСЃР»РѕРј (РЅР°РїСЂРёРјРµСЂ 110 РёР»Рё 110.5).")
             return
         if amount <= 0:
             conn.close()
-            await update.message.reply_text("Сумма должна быть больше нуля.")
+            await update.message.reply_text("РЎСѓРјРјР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ Р±РѕР»СЊС€Рµ РЅСѓР»СЏ.")
             return
         row = conn.execute("SELECT username FROM users WHERE user_id = ?", (user_id,)).fetchone()
         conn.execute(
@@ -554,13 +554,13 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         try:
             await context.bot.send_message(
                 chat_id=user_id,
-                text=f"💸 Вам начислена выплата: ${amount:.2f}",
+                text=f"рџ’ё Р’Р°Рј РЅР°С‡РёСЃР»РµРЅР° РІС‹РїР»Р°С‚Р°: ${amount:.2f}",
             )
         except Exception:
             pass
         clear_state(context)
         label = format_user_label(user_id, row["username"] if row else None)
-        await update.message.reply_text(f"Выплата отправлена: {label} на ${amount:.2f}.")
+        await update.message.reply_text(f"Р’С‹РїР»Р°С‚Р° РѕС‚РїСЂР°РІР»РµРЅР°: {label} РЅР° ${amount:.2f}.")
         return
 
 
@@ -568,19 +568,19 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         set_config(conn, "main_menu_text", text)
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Текст главного меню обновлен.")
+        await update.message.reply_text("РўРµРєСЃС‚ РіР»Р°РІРЅРѕРіРѕ РјРµРЅСЋ РѕР±РЅРѕРІР»РµРЅ.")
         return
 
     if name == "mainmenu_photo":
         if not update.message.photo:
             conn.close()
-            await update.message.reply_text("Отправьте фото.")
+            await update.message.reply_text("РћС‚РїСЂР°РІСЊС‚Рµ С„РѕС‚Рѕ.")
             return
         photo_id = update.message.photo[-1].file_id
         set_config(conn, "main_menu_photo_id", photo_id)
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Фото главного меню обновлено.")
+        await update.message.reply_text("Р¤РѕС‚Рѕ РіР»Р°РІРЅРѕРіРѕ РјРµРЅСЋ РѕР±РЅРѕРІР»РµРЅРѕ.")
         return
 
     if name == "mainmenu_btn":
@@ -589,7 +589,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
             set_config(conn, key, text)
         conn.close()
         clear_state(context)
-        await update.message.reply_text("Кнопка обновлена.")
+        await update.message.reply_text("РљРЅРѕРїРєР° РѕР±РЅРѕРІР»РµРЅР°.")
         return
 
     if name == "admin_report_date":
@@ -623,7 +623,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         conn.close()
         clear_state(context)
         await update.message.reply_text(
-            f"Отчет за {text}\n"
+            f"Отчёт за {text}\n"
             f"Сдано: {rows['cnt']}\n"
             f"Встал: {success['cnt']} | Слет: {slip['cnt']} | Ошибки: {error['cnt']}"
         )
@@ -633,7 +633,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         user_id = resolve_user_id_input(conn, text)
         if user_id is None:
             conn.close()
-            await update.message.reply_text("Введите корректный ЮЗ (@username) или ID.")
+            await update.message.reply_text("Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ Р®Р— (@username) РёР»Рё ID.")
             return
         user = conn.execute(
             "SELECT user_id, username, last_seen, is_approved FROM users WHERE user_id = ?",
@@ -642,13 +642,17 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         conn.close()
         clear_state(context)
         if not user:
-            await update.message.reply_text("Пользователь не найден.")
+            await update.message.reply_text("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ.")
             return
         await update.message.reply_text(
             f"{format_user_label(user['user_id'], user['username'])}\n"
-            f"Активность: {format_ts(user['last_seen'])}\n"
-            f"Одобрен: {'да' if user['is_approved'] else 'нет'}"
+            f"РђРєС‚РёРІРЅРѕСЃС‚СЊ: {format_ts(user['last_seen'])}\n"
+            f"РћРґРѕР±СЂРµРЅ: {'РґР°' if user['is_approved'] else 'РЅРµС‚'}"
         )
         return
 
     conn.close()
+
+
+
+

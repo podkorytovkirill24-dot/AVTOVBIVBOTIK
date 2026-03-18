@@ -8,7 +8,7 @@ def build_report_tariff(conn: sqlite3.Connection) -> str:
         "FROM tariffs t LEFT JOIN queue_numbers q ON q.tariff_id = t.id "
         "GROUP BY t.id ORDER BY t.id"
     ).fetchall()
-    lines = ["📈 Отчет по тарифам", "Формат: количество и Success rate", ""]
+    lines = ["📈 Отчёт по тарифам", "Формат: количество и Success rate", ""]
     for r in rows:
         processed = (
             int(r["success"] or 0)
