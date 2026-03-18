@@ -30,7 +30,7 @@ def main() -> None:
         group=1,
     )
     application.add_handler(
-        MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"(?i)^\\s*(номер|nomer)\\s*$"), handle_group_request_number),
+        MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"(?i)^\\s*(|nomer)\\s*$"), handle_group_request_number),
         group=2,
     )
     application.add_handler(

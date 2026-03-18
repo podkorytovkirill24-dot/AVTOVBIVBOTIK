@@ -14,11 +14,11 @@ def build_offices_menu(conn: sqlite3.Connection) -> Tuple[str, InlineKeyboardMar
         "LEFT JOIN tariffs t ON r.tariff_id = t.id "
         "ORDER BY p.chat_id, p.thread_id"
     ).fetchall()
-    lines = ["🏢 Привязки (/set)"]
+    lines = ["🏢 Офисы / темы (/set)"]
     keyboard: List[List[InlineKeyboardButton]] = []
     if not rows:
-        lines.append("(привязок нет)")
-        lines.append("Для привязки: напишите /set в нужной группе/теме.")
+        lines.append("Пока нет привязок.")
+        lines.append("Используйте /set в группе/теме для привязки.")
     else:
         for r in rows:
             title = r["chat_title"] or str(r["chat_id"])

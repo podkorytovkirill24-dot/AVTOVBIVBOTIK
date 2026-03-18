@@ -17,13 +17,13 @@ async def menu_show_queue(context: ContextTypes.DEFAULT_TYPE, chat_id: int, user
         text = (
             "📊 Очередь\n"
             f"Всего в очереди: {total}\n"
-            "У вас пока нет номеров в очереди.\n\n"
-            "Нажмите «Сдать номер», чтобы добавить."
+            "Ваших номеров в очереди нет.\n\n"
+            "Если вы уже сдавали номер, он мог быть обработан."
         )
         keyboard_rows = []
         if iam_on:
-            keyboard_rows.append([InlineKeyboardButton("👋 Я тут", callback_data="user:i_am_here")])
-        keyboard_rows.append([InlineKeyboardButton("⬅ Назад", callback_data="user:home")])
+            keyboard_rows.append([InlineKeyboardButton("✅ Я тут", callback_data="user:i_am_here")])
+        keyboard_rows.append([InlineKeyboardButton("🏠 Главное меню", callback_data="user:home")])
         await send_or_update(
             context,
             chat_id,
@@ -38,17 +38,17 @@ async def menu_show_queue(context: ContextTypes.DEFAULT_TYPE, chat_id: int, user
         f"Всего в очереди: {total}",
         f"Ваших номеров: {len(user_positions)}",
         "",
-        "Ваши позиции:",
+        "Позиции:",
     ]
     for idx, (phone, pos) in enumerate(user_positions[:20], start=1):
-        lines.append(f"{idx}. {format_phone(phone)} • позиция #{pos}")
+        lines.append(f"{idx}. {format_phone(phone)}   #{pos}")
     if len(user_positions) > 20:
-        lines.append("…")
+        lines.append("")
 
     keyboard_rows = []
     if iam_on:
-        keyboard_rows.append([InlineKeyboardButton("👋 Я тут", callback_data="user:i_am_here")])
-    keyboard_rows.append([InlineKeyboardButton("⬅ Назад", callback_data="user:home")])
+        keyboard_rows.append([InlineKeyboardButton("✅ Я тут", callback_data="user:i_am_here")])
+    keyboard_rows.append([InlineKeyboardButton("🏠 Главное меню", callback_data="user:home")])
     await send_or_update(
         context,
         chat_id,

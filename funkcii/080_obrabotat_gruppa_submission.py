@@ -25,7 +25,7 @@ async def handle_group_submission(update: Update, context: ContextTypes.DEFAULT_
         return
     if get_config_bool(conn, "stop_work"):
         conn.close()
-        await update.message.reply_text("⛔ STOP-WORK\nПриемка временно на паузе. Попробуйте позже.")
+        await update.message.reply_text("⛔ STOP-WORK\nПриёмка временно на паузе. Попробуйте позже.")
         return
 
     upsert_user(conn, update.effective_user)

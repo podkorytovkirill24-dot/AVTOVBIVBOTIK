@@ -5,8 +5,8 @@ async def menu_show_tariffs(context: ContextTypes.DEFAULT_TYPE, chat_id: int, me
         await send_or_update(
             context,
             chat_id,
-            "⛔ STOP-WORK\nПриемка временно на паузе. Попробуйте позже.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅ Назад", callback_data="user:home")]]),
+            "⛔ STOP-WORK\nПриёмка временно на паузе. Попробуйте позже.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Главное меню", callback_data="user:home")]]),
             message=message,
         )
         return
@@ -18,8 +18,8 @@ async def menu_show_tariffs(context: ContextTypes.DEFAULT_TYPE, chat_id: int, me
         await send_or_update(
             context,
             chat_id,
-            "💲 Тарифы\n\nПока не настроены.\nОбратитесь к администратору.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅ Назад", callback_data="user:home")]]),
+            "Тарифы пока не настроены.\nОбратитесь к администратору.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Главное меню", callback_data="user:home")]]),
             message=message,
         )
         return
@@ -27,7 +27,7 @@ async def menu_show_tariffs(context: ContextTypes.DEFAULT_TYPE, chat_id: int, me
     for t in tariffs:
         label = f"{t['name']} | {t['duration_min']} мин | ${t['price']}"
         keyboard.append([InlineKeyboardButton(label, callback_data=f"user:tariff:{t['id']}")])
-    keyboard.append([InlineKeyboardButton("⬅ Назад", callback_data="user:home")])
+    keyboard.append([InlineKeyboardButton("🏠 Главное меню", callback_data="user:home")])
     await send_or_update(
         context,
         chat_id,

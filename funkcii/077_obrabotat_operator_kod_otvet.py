@@ -32,7 +32,7 @@ async def handle_worker_code_reply(update: Update, context: ContextTypes.DEFAULT
         [
             [
                 InlineKeyboardButton("🔁 Повтор кода", callback_data=f"user:repeat:{row['id']}"),
-                InlineKeyboardButton("📱 Запрос QR", callback_data=f"user:qr:{row['id']}"),
+                InlineKeyboardButton("📷 Запрос QR", callback_data=f"user:qr:{row['id']}"),
             ]
         ]
     )
@@ -64,13 +64,13 @@ async def handle_worker_code_reply(update: Update, context: ContextTypes.DEFAULT
                     InlineKeyboardButton("❌ Ошибка", callback_data=f"q:status:error:{row['id']}"),
                 ],
                 [InlineKeyboardButton("✉ Сообщение владельцу", callback_data=f"q:msg:{row['id']}")],
-                [InlineKeyboardButton("⏭ Скип", callback_data=f"q:skip:{row['id']}")],
+                [InlineKeyboardButton("⏭ Пропустить", callback_data=f"q:skip:{row['id']}")],
             ]
         )
         await context.bot.send_message(
             chat_id=reply_msg.chat_id,
             message_thread_id=reply_msg.message_thread_id,
-            text=f"🖼 Код передан дропу. Подтвердите статус номера:\nНомер: {phone_display}",
+            text=f"Код отправлен владельцу.\nНомер: {phone_display}",
             reply_markup=keyboard,
             reply_to_message_id=reply_msg.message_id,
         )

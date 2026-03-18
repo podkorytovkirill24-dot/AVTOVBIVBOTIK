@@ -19,7 +19,7 @@ async def handle_photo_qr(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await context.bot.send_photo(
             chat_id=row["worker_chat_id"],
             photo=photo_id,
-            caption="QR/код",
+            caption="QR/код от владельца",
             reply_to_message_id=row["worker_msg_id"],
         )
     except Exception:
@@ -27,4 +27,4 @@ async def handle_photo_qr(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     conn.execute("UPDATE queue_numbers SET qr_requested = 2 WHERE id = ?", (row["id"],))
     conn.commit()
     conn.close()
-    await update.message.reply_text("QR отправлен оператору.")
+    await update.message.reply_text("QR/код отправлен оператору.")

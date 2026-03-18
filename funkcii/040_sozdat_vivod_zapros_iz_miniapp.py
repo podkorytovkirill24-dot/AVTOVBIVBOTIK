@@ -3,7 +3,7 @@ def create_withdraw_request_from_miniapp(tg_user: Dict, amount_value) -> Dict:
     try:
         amount = float(str(amount_value).replace(",", "."))
     except Exception:
-        return {"ok": False, "error": "Введите корректную сумму."}
+        return {"ok": False, "error": "  ."}
     conn = get_conn()
     try:
         conn.execute(
@@ -23,10 +23,10 @@ def create_withdraw_request_from_miniapp(tg_user: Dict, amount_value) -> Dict:
         balance = calculate_user_balance(conn, user_id)
         if amount <= 0:
             conn.rollback()
-            return {"ok": False, "error": "Сумма должна быть больше 0."}
+            return {"ok": False, "error": "    0."}
         if amount > balance:
             conn.rollback()
-            return {"ok": False, "error": f"Недостаточно средств. Доступно: ${balance:.2f}"}
+            return {"ok": False, "error": f" . : ${balance:.2f}"}
         conn.execute(
             "INSERT INTO withdrawal_requests (user_id, amount, status, created_at) VALUES (?, ?, 'pending', ?)",
             (user_id, amount, now_ts()),

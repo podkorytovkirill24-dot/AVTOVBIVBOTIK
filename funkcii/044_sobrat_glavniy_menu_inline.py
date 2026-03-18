@@ -14,7 +14,7 @@ def build_main_menu_inline(conn: sqlite3.Connection, is_admin_user: bool) -> Inl
         ],
     ]
     if iam_on:
-        rows.append([InlineKeyboardButton("👋 Я тут", callback_data="user:i_am_here")])
+        rows.append([InlineKeyboardButton("✅ Я тут", callback_data="user:i_am_here")])
     rows.extend([
         [
             InlineKeyboardButton(archive, callback_data="menu:archive"),
@@ -23,9 +23,9 @@ def build_main_menu_inline(conn: sqlite3.Connection, is_admin_user: bool) -> Inl
         [InlineKeyboardButton(support, callback_data="menu:support")],
     ])
     if lunch_on:
-        rows.append([InlineKeyboardButton("🍽 Расписание обедов", callback_data="user:lunch")])
+        rows.append([InlineKeyboardButton("🍽 Обед", callback_data="user:lunch")])
     if MINI_APP_BASE_URL:
-        rows.append([InlineKeyboardButton("✨ Мини-приложение", web_app=WebAppInfo(url=f"{MINI_APP_BASE_URL}/miniapp"))])
+        rows.append([InlineKeyboardButton("💻 Мини-кабинет", web_app=WebAppInfo(url=f"{MINI_APP_BASE_URL}/miniapp"))])
     if is_admin_user:
         rows.append([InlineKeyboardButton(admin, callback_data="menu:admin")])
     return InlineKeyboardMarkup(rows)

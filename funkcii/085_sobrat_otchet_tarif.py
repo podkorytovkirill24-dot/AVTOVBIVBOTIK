@@ -8,7 +8,7 @@ def build_report_tariff(conn: sqlite3.Connection) -> str:
         "FROM tariffs t LEFT JOIN queue_numbers q ON q.tariff_id = t.id "
         "GROUP BY t.id ORDER BY t.id"
     ).fetchall()
-    lines = ["📈 Отчёт по тарифам", "Формат: количество и Success rate", ""]
+    lines = ["📈 Отчёт по тарифам", "Формат: успех | слёт | ошибка | отмена | всего | успех%", ""]
     for r in rows:
         processed = (
             int(r["success"] or 0)
@@ -18,7 +18,7 @@ def build_report_tariff(conn: sqlite3.Connection) -> str:
         )
         lines.append(
             f"• {r['name']}: "
-            f"встал {r['success']} | слет {r['slip']} | ошибка {r['error']} | отменен {r['canceled']} | "
-            f"всего {processed} | success rate {pct(int(r['success'] or 0), processed)}"
+            f"{r['success']} | {r['slip']} | {r['error']} | {r['canceled']} | "
+            f"{processed} | {pct(int(r['success'] or 0), processed)}"
         )
     return "\n".join(lines)

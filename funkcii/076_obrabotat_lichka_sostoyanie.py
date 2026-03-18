@@ -623,7 +623,7 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         conn.close()
         clear_state(context)
         await update.message.reply_text(
-            f"Отчёт за {text}\n"
+            f"Отчет за {text}\n"
             f"Сдано: {rows['cnt']}\n"
             f"Встал: {success['cnt']} | Слет: {slip['cnt']} | Ошибки: {error['cnt']}"
         )
@@ -652,7 +652,3 @@ async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYP
         return
 
     conn.close()
-
-
-
-

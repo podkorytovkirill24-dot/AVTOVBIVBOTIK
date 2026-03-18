@@ -5,8 +5,8 @@ def build_tops(conn: sqlite3.Connection, metric: str, period: str) -> str:
         "yesterday": "Вчера",
         "7d": "7 дней",
         "30d": "30 дней",
-        "all": "Всё время",
-    }.get(period, "Всё время")
+        "all": "За всё время",
+    }.get(period, "Сегодня")
 
     if metric == "invited":
         total_metric = conn.execute(
@@ -21,7 +21,7 @@ def build_tops(conn: sqlite3.Connection, metric: str, period: str) -> str:
             "LEFT JOIN users u ON u.user_id = r.user_id "
             "ORDER BY r.cnt DESC LIMIT 10"
         ).fetchall()
-        title = "Приглашённые"
+        title = "По приглашениям"
     else:
         status_filter = ""
         if metric == "success":
@@ -61,17 +61,17 @@ def build_tops(conn: sqlite3.Connection, metric: str, period: str) -> str:
                 (start_ts, end_ts),
             ).fetchall()
         title = {
-            "submitted": "Сдано номеров",
-            "success": "Встал",
-            "slip": "Слетел",
-            "error": "Ошибки",
-        }.get(metric, "Сдано номеров")
+            "submitted": "По сдачам",
+            "success": "По успехам",
+            "slip": "По слётам",
+            "error": "По ошибкам",
+        }.get(metric, "Топ")
 
     lines = [
-        "🏆 Топы",
-        f"Метрика: {title}",
+        "🏆 Топ пользователей",
+        f"Раздел: {title}",
         f"Период: {period_title}",
-        f"Всего по метрике: {total_metric}",
+        f"Всего: {total_metric}",
         "",
     ]
     if not rows:

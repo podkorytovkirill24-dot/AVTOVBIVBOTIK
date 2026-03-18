@@ -19,7 +19,7 @@ async def job_tick(context: ContextTypes.DEFAULT_TYPE) -> None:
                     try:
                         await context.bot.send_message(
                             chat_id=r["user_id"],
-                            text=f"❌ Ваш номер {r['phone']} слетел.",
+                            text=f"Ваш номер {r['phone']} помечен как слёт (авто-слёт).",
                         )
                     except Exception:
                         pass
@@ -56,7 +56,7 @@ async def job_tick(context: ContextTypes.DEFAULT_TYPE) -> None:
                         await context.bot.send_message(
                             chat_id=u["user_id"],
                             text=(
-                                "⛔ Ваши номера удалены из очереди, потому что вы не нажимали «Я тут»."
+                                "Ваша очередь снята из-за отсутствия подтверждения «Я тут»."
                             ),
                         )
                     except Exception:
@@ -68,8 +68,8 @@ async def job_tick(context: ContextTypes.DEFAULT_TYPE) -> None:
                             await context.bot.send_message(
                                 chat_id=u["user_id"],
                                 text=(
-                                    "⏳ Напоминание: нажмите «Я тут». "
-                                    "Осталось 5 минут, иначе номера удалятся из очереди."
+                                    "Напоминание: подтвердите «Я тут» в течение 5 минут, "
+                                    "иначе очередь будет снята."
                                 ),
                             )
                         except Exception:

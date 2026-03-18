@@ -4,9 +4,9 @@ def build_admin_logs_text(conn: sqlite3.Connection, limit: int = 30) -> str:
         "FROM admin_logs ORDER BY created_at DESC LIMIT ?",
         (limit,),
     ).fetchall()
-    lines = ["📜 Лог админ-действий"]
+    lines = ["🧾 Логи админов"]
     if not rows:
-        lines.append("• Записей пока нет.")
+        lines.append("Пока пусто.")
         return "\n".join(lines)
     for r in rows:
         actor = format_user_label(r["admin_user_id"], r["admin_username"])

@@ -17,11 +17,11 @@ def build_report_general(conn: sqlite3.Connection) -> str:
     ).fetchone()["cnt"]
     finished = success + slip + error
     return (
-        "📈 Общий отчёт\n"
-        f"• Завершено: {total}\n"
-        f"• Встал: {success} ({pct(success, total)})\n"
-        f"• Слет: {slip} ({pct(slip, total)})\n"
-        f"• Ошибка: {error} ({pct(error, total)})\n"
-        f"• Отменено: {canceled} ({pct(canceled, total)})\n"
-        f"• Success rate: {pct(success, finished)}"
+        "📊 Общий отчёт\n"
+        f"Всего завершено: {total}\n"
+        f"Успешно: {success} ({pct(success, total)})\n"
+        f"Слет: {slip} ({pct(slip, total)})\n"
+        f"Ошибка: {error} ({pct(error, total)})\n"
+        f"Отменено: {canceled} ({pct(canceled, total)})\n"
+        f"Успех среди завершённых: {pct(success, finished)}"
     )

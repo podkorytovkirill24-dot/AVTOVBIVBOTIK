@@ -1,4 +1,4 @@
-_MOJIBAKE_CHARS = set("ЀЂЃЄЅІЇЈЉЊЋЌЍЎЏѐђѓєѕіїјљњћќѝўџ")
+_MOJIBAKE_CHARS = set("")
 
 
 def _looks_mojibake(text: str) -> bool:
@@ -164,7 +164,7 @@ def init_db() -> None:
             "ON CONFLICT(key) DO NOTHING",
             (key, value),
         )
-    # Автоматически чистим "кракозябры" в конфиге, если они были сохранены ранее
+    #   ""  ,     
     rows = conn.execute("SELECT key, value FROM config").fetchall()
     for row in rows:
         value = row["value"] if row["value"] is not None else ""

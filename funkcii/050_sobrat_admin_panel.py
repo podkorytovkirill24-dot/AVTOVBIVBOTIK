@@ -12,11 +12,11 @@ def build_admin_panel() -> InlineKeyboardMarkup:
         [InlineKeyboardButton("🏆 Топы", callback_data="adm:tops:submitted:all")],
         [
             InlineKeyboardButton("👥 Пользователи", callback_data="adm:users"),
-            InlineKeyboardButton("🧹 Очередь", callback_data="adm:queue"),
+            InlineKeyboardButton("🧾 Очередь", callback_data="adm:queue"),
         ],
         [InlineKeyboardButton("🔍 Поиск по номеру", callback_data="adm:search")],
         [
-            InlineKeyboardButton("💰 Выводы", callback_data="adm:withdrawals"),
+            InlineKeyboardButton("💵 Выводы", callback_data="adm:withdrawals"),
             InlineKeyboardButton("💸 Выплаты", callback_data="adm:payouts"),
         ],
         [InlineKeyboardButton("📣 Рассылка", callback_data="adm:broadcast")],

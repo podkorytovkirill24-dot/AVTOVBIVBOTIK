@@ -12,7 +12,7 @@ async def handle_group_request_number(update: Update, context: ContextTypes.DEFA
     conn = get_conn()
     if is_lunch_time(conn):
         conn.close()
-        await update.message.reply_text("Сейчас обед. Попробуйте позже.")
+        await update.message.reply_text("🍽 Сейчас обед. Попробуйте позже.")
         return
 
     thread_id = update.message.message_thread_id or 0
@@ -26,7 +26,7 @@ async def handle_group_request_number(update: Update, context: ContextTypes.DEFA
         ).fetchone()
         if not topic or not topic["reception_chat_id"]:
             conn.close()
-            await update.message.reply_text("Привязка не настроена. Напишите /set.")
+            await update.message.reply_text("Тема не привязана. Сначала используйте /set.")
             return
         reception_chat_id = topic["reception_chat_id"]
     else:

@@ -9,7 +9,7 @@ async def menu_start_support(context: ContextTypes.DEFAULT_TYPE, chat_id: int, u
     conn.commit()
     conn.close()
     set_state(context, "support_message", ticket_id=ticket_id)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("⬅ Назад", callback_data="user:home")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Главное меню", callback_data="user:home")]])
     await send_or_update(
         context,
         chat_id,

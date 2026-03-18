@@ -61,6 +61,6 @@ async def handle_group_worker_state(update: Update, context: ContextTypes.DEFAUL
 
     clear_state(context)
     try:
-        await update.message.reply_text("✅ Сообщение отправлено владельцу.")
+        await update.message.reply_text("Сообщение отправлено владельцу.")
     except Exception:
         pass

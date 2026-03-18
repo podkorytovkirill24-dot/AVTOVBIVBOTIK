@@ -3,22 +3,22 @@ def create_payout_from_miniapp_admin(tg_admin: Dict, target_raw: str, amount_val
     try:
         admin_id = int(tg_admin["id"])
         if not is_admin(conn, admin_id):
-            return {"ok": False, "error": "Нет доступа."}
+            return {"ok": False, "error": " ."}
         target_user_id = resolve_user_id_input(conn, (target_raw or "").strip())
         if target_user_id is None:
-            return {"ok": False, "error": "Пользователь не найден. Укажите @username или ID."}
+            return {"ok": False, "error": "  .  @username  ID."}
         try:
             amount = float(str(amount_value).replace(",", "."))
         except Exception:
-            return {"ok": False, "error": "Введите корректную сумму."}
+            return {"ok": False, "error": "  ."}
         if amount <= 0:
-            return {"ok": False, "error": "Сумма должна быть больше 0."}
+            return {"ok": False, "error": "    0."}
         conn.execute(
             "INSERT INTO payouts (user_id, amount, note, created_at) VALUES (?, ?, ?, ?)",
             (target_user_id, amount, (note or "").strip(), now_ts()),
         )
         conn.commit()
-        notify_user_direct(int(target_user_id), f"💸 Вам начислена выплата: ${amount:.2f}")
+        notify_user_direct(int(target_user_id), f"   : ${amount:.2f}")
         log_admin_action(
             admin_id,
             tg_admin.get("username"),

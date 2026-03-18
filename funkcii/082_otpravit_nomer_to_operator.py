@@ -13,11 +13,11 @@ async def send_number_to_worker(update: Update, context: ContextTypes.DEFAULT_TY
     conn.close()
 
     phone_display = format_phone(row["phone"])
-    title = reception_title or row["tariff_name"] or "Приемка"
+    title = reception_title or row["tariff_name"] or ""
     text_msg = (
         f"{title}\n"
-        f"📞 Номер: {phone_display}\n"
-        "Пожалуйста пришлите код по номеру."
+        f"Номер: {phone_display}\n"
+        "После обработки поставьте статус ниже."
     )
 
     buttons = [
@@ -26,7 +26,7 @@ async def send_number_to_worker(update: Update, context: ContextTypes.DEFAULT_TY
             InlineKeyboardButton("❌ Ошибка", callback_data=f"q:status:error:{row['id']}"),
         ],
         [InlineKeyboardButton("✉ Сообщение владельцу", callback_data=f"q:msg:{row['id']}")],
-        [InlineKeyboardButton("⏭ Скип", callback_data=f"q:skip:{row['id']}")],
+        [InlineKeyboardButton("⏭ Пропустить", callback_data=f"q:skip:{row['id']}")],
     ]
     keyboard = InlineKeyboardMarkup(buttons)
 
@@ -83,7 +83,7 @@ async def send_number_to_worker(update: Update, context: ContextTypes.DEFAULT_TY
         try:
             await context.bot.send_message(
                 chat_id=row["user_id"],
-                text=f"✅ Ваш номер {phone_display} взяли в работу.",
+                text=f"Ваш номер {phone_display} взят в работу.",
             )
         except Exception:
             pass

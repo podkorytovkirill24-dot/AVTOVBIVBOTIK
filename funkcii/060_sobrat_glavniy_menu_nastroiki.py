@@ -7,30 +7,30 @@ def build_main_menu_settings(conn: sqlite3.Connection) -> Tuple[str, InlineKeybo
     profile = get_config(conn, "menu_btn_profile", DEFAULT_CONFIG["menu_btn_profile"])
     support = get_config(conn, "menu_btn_support", DEFAULT_CONFIG["menu_btn_support"])
     lines = [
-        "🎨 Настройка главного меню",
-        f"📝 Текст: {text}",
-        f"🖼 Фото: {'Установлено' if photo else 'Нет'}",
+        "🎨 Настройки главного меню",
+        f"Текст меню: {text}",
+        f"Фото меню: {'есть' if photo else 'нет'}",
         "",
-        "Названия кнопок:",
+        "Кнопки:",
         f"• Сдать номер: {submit}",
         f"• Очередь: {queue_btn}",
         f"• Архив: {archive}",
         f"• Профиль: {profile}",
-        f"• Техподдержка: {support}",
+        f"• Поддержка: {support}",
     ]
     keyboard = [
-        [InlineKeyboardButton("📝 Изменить текст", callback_data="adm:mainmenu:text")],
+        [InlineKeyboardButton("✏ Изменить текст", callback_data="adm:mainmenu:text")],
         [InlineKeyboardButton("🖼 Изменить фото", callback_data="adm:mainmenu:photo")],
         [
-            InlineKeyboardButton("☎ Сдать номер", callback_data="adm:mainmenu:btn:submit"),
-            InlineKeyboardButton("📊 Очередь", callback_data="adm:mainmenu:btn:queue"),
+            InlineKeyboardButton("✏ Кнопка «Сдать»", callback_data="adm:mainmenu:btn:submit"),
+            InlineKeyboardButton("✏ Кнопка «Очередь»", callback_data="adm:mainmenu:btn:queue"),
         ],
         [
-            InlineKeyboardButton("🗂 Архив", callback_data="adm:mainmenu:btn:archive"),
-            InlineKeyboardButton("👤 Профиль", callback_data="adm:mainmenu:btn:profile"),
+            InlineKeyboardButton("✏ Кнопка «Архив»", callback_data="adm:mainmenu:btn:archive"),
+            InlineKeyboardButton("✏ Кнопка «Профиль»", callback_data="adm:mainmenu:btn:profile"),
         ],
-        [InlineKeyboardButton("🛠 Техподдержка", callback_data="adm:mainmenu:btn:support")],
-        [InlineKeyboardButton("♻ Сбросить всё", callback_data="adm:mainmenu:reset")],
+        [InlineKeyboardButton("✏ Кнопка «Поддержка»", callback_data="adm:mainmenu:btn:support")],
+        [InlineKeyboardButton("♻ Сбросить по умолчанию", callback_data="adm:mainmenu:reset")],
         [InlineKeyboardButton("⬅ Назад", callback_data="adm:panel")],
     ]
     return "\n".join(lines), InlineKeyboardMarkup(keyboard)

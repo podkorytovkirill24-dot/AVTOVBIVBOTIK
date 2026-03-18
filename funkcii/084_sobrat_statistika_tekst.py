@@ -50,7 +50,7 @@ def build_stats_text(conn: sqlite3.Connection, period: str) -> str:
         "yesterday": "Вчера",
         "7d": "7 дней",
         "30d": "30 дней",
-        "all": "Всё время",
+        "all": "За всё время",
     }.get(period, "Сегодня")
 
     top_depts = conn.execute(
@@ -66,27 +66,27 @@ def build_stats_text(conn: sqlite3.Connection, period: str) -> str:
         f"Период: {period_title}",
         "",
         "👥 Пользователи",
-        f"• Всего: {users_total}",
+        f"Всего пользователей: {users_total}",
         "",
-        "📦 Номера (всего в системе)",
-        f"• всего: {total_numbers}",
-        f"• в ожидании: {queued} | в работе: {taken}",
-        f"• встал: {done} | отменен: {canceled}",
+        "🧾 Очередь (всего)",
+        f"Всего номеров: {total_numbers}",
+        f"В очереди: {queued} | В работе: {taken}",
+        f"Успешно: {done} | Отменено: {canceled}",
         "",
-        "🧮 За период",
-        f"• Сдано: {submitted}",
-        f"• Выдано: {taken_p}",
-        f"• Встал: {success_p} ({pct(success_p, submitted)})",
-        f"• Слет: {slip_p} ({pct(slip_p, submitted)})",
-        f"• Ошибка: {error_p} ({pct(error_p, submitted)})",
-        f"• Completion rate: {pct(finished_p, submitted)}",
-        f"• Success rate: {pct(success_p, finished_p)}",
+        "📈 За период",
+        f"Сдано: {submitted}",
+        f"Взято в работу: {taken_p}",
+        f"Успешно: {success_p} ({pct(success_p, submitted)})",
+        f"Слет: {slip_p} ({pct(slip_p, submitted)})",
+        f"Ошибка: {error_p} ({pct(error_p, submitted)})",
+        f"Завершено: {pct(finished_p, submitted)}",
+        f"Успех среди завершённых: {pct(success_p, finished_p)}",
         "",
-        "🏆 Топ отделов (по сдаче)",
+        "🏷 Топ отделов (по сдаче)",
     ]
     if top_depts:
         for row in top_depts:
             lines.append(f"• {row['name'] or 'Без отдела'}: {row['cnt']}")
     else:
-        lines.append(f"• {ui('empty_data')}")
+        lines.append(f"{ui('empty_data')}")
     return "\n".join(lines)

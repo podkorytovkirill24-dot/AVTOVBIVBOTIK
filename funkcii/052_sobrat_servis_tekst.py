@@ -13,9 +13,9 @@ def build_service_text(conn: sqlite3.Connection) -> str:
     uptime = format_duration(int(time.time()) - BOT_STARTED_AT)
     return (
         "🧰 Сервис\n"
-        f"• Аптайм: {uptime}\n"
-        f"• Пользователи: {users}\n"
-        f"• Очередь: в ожидании {queued} | в работе {taken}\n"
-        f"• Итоги: встал {done} | слет {slip} | ошибка {error}\n"
-        f"• База: {db_size/1024:.1f} KB"
+        f"Время работы: {uptime}\n"
+        f"Пользователи: {users}\n"
+        f"Очередь: в ожидании {queued} | в работе {taken}\n"
+        f"Готово: {done} | Слет: {slip} | Ошибка: {error}\n"
+        f"Размер БД: {db_size/1024:.1f} KB"
     )
