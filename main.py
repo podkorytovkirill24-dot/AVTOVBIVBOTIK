@@ -5,7 +5,7 @@ _PAPKA_FUNKCIY = Path(__file__).resolve().parent / 'funkcii'
 
 def _zagruzit_blok(imya_fayla: str) -> None:
     put = _PAPKA_FUNKCIY / imya_fayla
-    # utf-8-sig автоматически убирает BOM, если он случайно попал в начало файла
+    # utf-8-sig   BOM,       
     kod = put.read_text(encoding='utf-8-sig')
     exec(compile(kod, str(put), 'exec'), globals(), globals())
 
@@ -139,7 +139,7 @@ UI_TEXTS = {
     "empty_withdrawals": "💰 Запросов на вывод пока нет.",
     "empty_requests": "📝 Заявок пока нет.",
     "empty_support_tickets": "✏ Открытых тикетов пока нет.",
-    "empty_tariffs": "💲 Тарифов пока нет.",
+    "empty_tariffs": "💳 Тарифов пока нет.",
     "empty_data": "Нет данных.",
 }
 
