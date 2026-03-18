@@ -3,7 +3,7 @@ def _get_start_ts(row) -> int:
 
 
 def _format_start_label(start_ts: int) -> str:
-    return format_ts(start_ts) if start_ts else "- (РЅРµ РІР·СЏС‚)"
+    return format_ts(start_ts) if start_ts else "- (не взят)"
 
 
 def build_report_detailed(conn: sqlite3.Connection) -> str:
@@ -16,7 +16,7 @@ def build_report_detailed(conn: sqlite3.Connection) -> str:
         "WHERE q.completed_at IS NOT NULL AND q.status IN ('success','slip','error','canceled') "
         "ORDER BY q.completed_at DESC LIMIT 30"
     ).fetchall()
-    lines = ["рџ“€ Р”РµС‚Р°Р»СЊРЅС‹Р№ РѕС‚С‡С‘С‚", "РџРµСЂРёРѕРґ: РїРѕСЃР»РµРґРЅРёРµ 30 Р·Р°РїРёСЃРµР№", ""]
+    lines = ["📈 Детальный отчёт", "Период: последние 30 записей", ""]
     for r in rows:
         start_ts = _get_start_ts(r)
         if not start_ts:
@@ -31,14 +31,14 @@ def build_report_detailed(conn: sqlite3.Connection) -> str:
             mark = "-"
         else:
             limit_sec = int(duration_limit or 0) * 60
-            mark = "вњ…" if duration_sec >= limit_sec else "вќЊ"
+            mark = "✅" if duration_sec >= limit_sec else "❌"
         start_label = _format_start_label(start_ts)
         tariff = r["tariff"] or "-"
         lines.append(
-            f"вЂў {r['phone']} | {format_user_label(r['user_id'], r['username'])} | "
+            f"• {r['phone']} | {format_user_label(r['user_id'], r['username'])} | "
             f"{status_human(r['status'])} | {tariff} | "
-            f"РІСЃС‚Р°Р»: {start_label} | СЃР»РµС‚РµР»: {format_ts(r['completed_at'])} | "
-            f"СЃС‚РѕСЏР»: {format_duration(duration_sec)} ({duration_min} РјРёРЅ) {mark}"
+            f"встал: {start_label} | слетел: {format_ts(r['completed_at'])} | "
+            f"стоял: {format_duration(duration_sec)} ({duration_min} мин) {mark}"
         )
     return "\n".join(lines)
 
@@ -58,7 +58,7 @@ def _iter_report_rows(conn: sqlite3.Connection, limit: int = 50):
 
 def build_report_stood(conn: sqlite3.Connection) -> str:
     rows = _iter_report_rows(conn, limit=50)
-    lines = ["вњ… РќРѕРјРµСЂР° РѕС‚СЃС‚РѕСЏРІС€РёРµ", "РџРµСЂРёРѕРґ: РїРѕСЃР»РµРґРЅРёРµ 50 Р·Р°РІРµСЂС€С‘РЅРЅС‹С…", ""]
+    lines = ["✅ Номера отстоявшие", "Период: последние 50 завершённых", ""]
     shown = 0
     for r in rows:
         duration_limit = r["duration_min"]
@@ -79,19 +79,19 @@ def build_report_stood(conn: sqlite3.Connection) -> str:
         start_label = format_ts(start_ts)
         tariff = r["tariff"] or "-"
         lines.append(
-            f"вЂў {r['phone']} | {format_user_label(r['user_id'], r['username'])} | "
+            f"• {r['phone']} | {format_user_label(r['user_id'], r['username'])} | "
             f"{status_human(r['status'])} | {tariff} | "
-            f"РІСЃС‚Р°Р»: {start_label} | СЃР»РµС‚РµР»: {format_ts(r['completed_at'])} | "
-            f"СЃС‚РѕСЏР»: {format_duration(duration_sec)} ({duration_min} РјРёРЅ)"
+            f"встал: {start_label} | слетел: {format_ts(r['completed_at'])} | "
+            f"стоял: {format_duration(duration_sec)} ({duration_min} мин)"
         )
     if shown == 0:
-        lines.append("РќРµС‚ Р·Р°РїРёСЃРµР№.")
+        lines.append("Нет записей.")
     return "\n".join(lines)
 
 
 def build_report_not_stood(conn: sqlite3.Connection) -> str:
     rows = _iter_report_rows(conn, limit=50)
-    lines = ["вќЊ РќРѕРјРµСЂР° РЅРµ РѕС‚СЃС‚РѕСЏРІС€РёРµ", "РџРµСЂРёРѕРґ: РїРѕСЃР»РµРґРЅРёРµ 50 Р·Р°РІРµСЂС€С‘РЅРЅС‹С…", ""]
+    lines = ["❌ Номера не отстоявшие", "Период: последние 50 завершённых", ""]
     shown = 0
     for r in rows:
         duration_limit = r["duration_min"]
@@ -110,12 +110,12 @@ def build_report_not_stood(conn: sqlite3.Connection) -> str:
         start_label = _format_start_label(start_ts)
         tariff = r["tariff"] or "-"
         lines.append(
-            f"вЂў {r['phone']} | {format_user_label(r['user_id'], r['username'])} | "
+            f"• {r['phone']} | {format_user_label(r['user_id'], r['username'])} | "
             f"{status_human(r['status'])} | {tariff} | "
-            f"РІСЃС‚Р°Р»: {start_label} | СЃР»РµС‚РµР»: {format_ts(r['completed_at'])} | "
-            f"СЃС‚РѕСЏР»: {format_duration(duration_sec)} ({duration_min} РјРёРЅ)"
+            f"встал: {start_label} | слетел: {format_ts(r['completed_at'])} | "
+            f"стоял: {format_duration(duration_sec)} ({duration_min} мин)"
         )
     if shown == 0:
-        lines.append("РќРµС‚ Р·Р°РїРёСЃРµР№.")
+        lines.append("Нет записей.")
     return "\n".join(lines)
 

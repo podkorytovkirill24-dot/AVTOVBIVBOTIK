@@ -96,6 +96,68 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await query.answer()
         return
 
+    if data == "adm:admins":
+        conn = get_conn()
+        if not is_admin(conn, query.from_user.id):
+            conn.close()
+            await query.answer(ui("no_access"), show_alert=True)
+            return
+        rows = conn.execute(
+            "SELECT a.user_id, u.username FROM admins a "
+            "LEFT JOIN users u ON u.user_id = a.user_id "
+            "ORDER BY a.user_id"
+        ).fetchall()
+        conn.close()
+        lines = ["🛡 Админы", ""]
+        if rows:
+            for r in rows:
+                lines.append(format_user_label(r["user_id"], r["username"]))
+        else:
+            lines.append("Админов пока нет.")
+        keyboard = InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("➕ Добавить админа", callback_data="adm:admin:add")],
+                [InlineKeyboardButton("➖ Удалить админа", callback_data="adm:admin:remove")],
+                [InlineKeyboardButton("Назад", callback_data="adm:panel")],
+            ]
+        )
+        await query.edit_message_text("\n".join(lines), reply_markup=keyboard)
+        await query.answer()
+        return
+
+    if data == "adm:admin:add":
+        set_state(context, "admin_add_admin")
+        await query.edit_message_text(
+            "Введите @username или ID пользователя:",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="adm:admins")]]),
+        )
+        await query.answer()
+        return
+
+    if data == "adm:admin:remove":
+        set_state(context, "admin_remove_admin")
+        await query.edit_message_text(
+            "Введите @username или ID пользователя для удаления:",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="adm:admins")]]),
+        )
+        await query.answer()
+        return
+
+    if data == "adm:broadcast":
+        conn = get_conn()
+        if not is_admin(conn, query.from_user.id):
+            conn.close()
+            await query.answer(ui("no_access"), show_alert=True)
+            return
+        conn.close()
+        set_state(context, "admin_broadcast")
+        await query.edit_message_text(
+            "Отправьте текст или фото для рассылки:",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="adm:panel")]]),
+        )
+        await query.answer()
+        return
+
     if data == "adm:service":
         conn = get_conn()
         if not is_admin(conn, query.from_user.id):
@@ -151,7 +213,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 [InlineKeyboardButton("Назад", callback_data="adm:service")],
             ]
         )
-        await query.edit_message_text("  ?", reply_markup=keyboard)
+        await query.edit_message_text("Очистить очередь?", reply_markup=keyboard)
         await query.answer()
         return
 
@@ -168,7 +230,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         conn.commit()
         conn.close()
         log_admin_action(query.from_user.id, query.from_user.username, "queue_clear", "status in queued,taken -> canceled")
-        await query.edit_message_text("  .", reply_markup=build_service_menu())
+        await query.edit_message_text("Очередь очищена.", reply_markup=build_service_menu())
         await query.answer()
         return
 
@@ -209,7 +271,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return
         keyboard = build_notifications_menu(conn)
         conn.close()
-        await query.edit_message_text(" ", reply_markup=keyboard)
+        await query.edit_message_text("🔔 Уведомления", reply_markup=keyboard)
         await query.answer()
         return
 
@@ -235,7 +297,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         conn.close()
         set_state(context, "admin_tariff_add_name")
         await query.edit_message_text(
-            "  :",
+            "Введите название тарифа:",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="adm:tariffs")]]),
         )
         await query.answer()
@@ -251,16 +313,16 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         ).fetchone()
         conn.close()
         if not row or row["user_id"] != query.from_user.id:
-            await query.answer(" ", show_alert=True)
+            await query.answer("Нет доступа.", show_alert=True)
             return
         if not row["worker_chat_id"]:
-            await query.answer("   ", show_alert=True)
+            await query.answer("Номер ещё не взят.", show_alert=True)
             return
         phone_display = format_phone(row["phone"])
-        action_label = " " if action == "repeat" else " QR"
+        action_label = "Повтор" if action == "repeat" else "QR-запрос"
         notify_text = (
-            f" {action_label}  {format_user_label(query.from_user.id, query.from_user.username)}\n"
-            f": {phone_display}"
+            f"{action_label} от {format_user_label(query.from_user.id, query.from_user.username)}\n"
+            f"Номер: {phone_display}"
         )
         try:
             await context.bot.send_message(
@@ -290,11 +352,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         text = get_config(conn, "lunch_text", "").strip()
         conn.close()
         if not text:
-            text = "    ."
+            text = "Текст обеда не задан."
         await send_or_update(
             context,
             query.from_user.id,
-            f"  \n\n{text}",
+            f"🍽 Обед\n\n{text}",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Главное меню", callback_data="user:home")]]),
             message=query.message,
         )
@@ -310,20 +372,20 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return
         keyboard = [[InlineKeyboardButton(f"{t['id']} {t['name']}", callback_data=f"adm:tariff:edit:{t['id']}")] for t in tariffs]
         keyboard.append([InlineKeyboardButton("Назад", callback_data="adm:tariffs")])
-        await query.edit_message_text(" :", reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text("Выберите тариф для редактирования:", reply_markup=InlineKeyboardMarkup(keyboard))
         await query.answer()
         return
 
     if data.startswith("adm:tariff:edit:"):
         tariff_id = int(parts[3])
         set_state(context, "admin_tariff_edit", tariff_id=tariff_id)
-        await query.edit_message_text(":  |  | ")
+        await query.edit_message_text("Введите: название | цена | минуты")
         await query.answer()
         return
 
     if data == "adm:tariff:delete":
         set_state(context, "admin_tariff_delete")
-        await query.edit_message_text(" ID   :")
+        await query.edit_message_text("Введите ID тарифа для удаления:")
         await query.answer()
         return
 
@@ -337,11 +399,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ))
             await query.answer()
             return
-        lines = ["  :"]
+        lines = ["⚡ Приоритеты тарифов", "Выберите тариф:"]
         keyboard = []
         for t in tariffs:
             lines.append(f"{t['id']}. {t['name']}  {t['priority']}")
-            keyboard.append([InlineKeyboardButton(f" {t['id']}", callback_data=f"adm:priority:{t['id']}")])
+            keyboard.append([InlineKeyboardButton(f"ID {t['id']}", callback_data=f"adm:priority:{t['id']}")])
         keyboard.append([InlineKeyboardButton("Назад", callback_data="adm:settings")])
         await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard))
         await query.answer()
@@ -350,7 +412,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if data.startswith("adm:priority:"):
         tariff_id = int(parts[2])
         set_state(context, "admin_set_priority", tariff_id=tariff_id)
-        await query.edit_message_text("   ():")
+        await query.edit_message_text("Введите приоритет (целое число):")
         await query.answer()
         return
 
@@ -416,13 +478,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
         conn.commit()
         conn.close()
-        await query.edit_message_text("    .")
+        await query.edit_message_text("Привязка сохранена.")
         try:
             await context.bot.send_message(
                 chat_id=chat_id,
                 message_thread_id=thread_id if thread_id > 0 else None,
-                text="  \n"
-                "  ,    .\n\n"
+                text="✅ Тема привязана.\nТеперь можно брать номера.\n\n"
                 f"{WORKER_RULES_TEXT}",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("Взять номер", callback_data="topic:next")]]
@@ -461,9 +522,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         conn.close()
         if tariff:
             hint = build_submit_hint(tariff["name"], tariff["duration_min"], tariff["price"])
-            await query.edit_message_text(f"  .\n\n{hint}")
+            await query.edit_message_text(f"Приёмка сохранена.\n\n{hint}")
         else:
-            await query.edit_message_text("  .     .")
+            await query.edit_message_text("Приёмка сохранена, тариф не найден.")
         await query.answer("")
         return
 
@@ -477,13 +538,13 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     if data == "adm:mainmenu:text":
         set_state(context, "mainmenu_text")
-        await query.edit_message_text("    :")
+        await query.edit_message_text("Введите текст главного меню:")
         await query.answer()
         return
 
     if data == "adm:mainmenu:photo":
         set_state(context, "mainmenu_photo")
-        await query.edit_message_text("     :")
+        await query.edit_message_text("Отправьте фото для главного меню:")
         await query.answer()
         return
 
@@ -500,7 +561,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.answer(" ", show_alert=True)
             return
         set_state(context, "mainmenu_btn", key=key)
-        await query.edit_message_text("   :")
+        await query.edit_message_text("Введите новый текст кнопки:")
         await query.answer()
         return
 
@@ -510,7 +571,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             if k.startswith("menu_btn_") or k.startswith("main_menu_"):
                 set_config(conn, k, v)
         conn.close()
-        await query.edit_message_text(".", reply_markup=InlineKeyboardMarkup(
+        await query.edit_message_text("Главное меню сброшено на значения по умолчанию.", reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Назад", callback_data="adm:mainmenu")]]
         ))
         await query.answer()
@@ -554,10 +615,18 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if data == "adm:reports":
         keyboard = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("1)  ", callback_data="adm:report:detailed")],
-                [InlineKeyboardButton("2)   ", callback_data="adm:report:date")],
-                [InlineKeyboardButton("3)  ", callback_data="adm:report:stood")],
-                [InlineKeyboardButton("4)   ", callback_data="adm:report:not_stood")],
+                [
+                    InlineKeyboardButton("📊 Общий", callback_data="adm:report:general"),
+                    InlineKeyboardButton("📈 По тарифам", callback_data="adm:report:tariff"),
+                ],
+                [
+                    InlineKeyboardButton("🧾 Детальный", callback_data="adm:report:detailed"),
+                    InlineKeyboardButton("📅 За дату", callback_data="adm:report:date"),
+                ],
+                [
+                    InlineKeyboardButton("✅ Отстоял", callback_data="adm:report:stood"),
+                    InlineKeyboardButton("❌ Не отстоял", callback_data="adm:report:not_stood"),
+                ],
                 [InlineKeyboardButton("Назад", callback_data="adm:panel")],
             ]
         )
@@ -583,11 +652,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         elif report_type == "date":
             set_state(context, "admin_report_date")
             conn.close()
-            await query.edit_message_text("    : ..")
+            await query.edit_message_text("Введите дату (ДД.ММ.ГГГГ):")
             await query.answer()
             return
         else:
-            text = "  ."
+            text = "Неизвестный отчёт."
         conn.close()
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Назад", callback_data="adm:reports")]]
@@ -613,13 +682,13 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                     InlineKeyboardButton("Ошибка", callback_data="adm:tops:error:all"),
                 ],
                 [
-                    InlineKeyboardButton("", callback_data=f"adm:tops:{metric}:today"),
-                    InlineKeyboardButton("", callback_data=f"adm:tops:{metric}:yesterday"),
-                    InlineKeyboardButton("7 ", callback_data=f"adm:tops:{metric}:7d"),
+                    InlineKeyboardButton("Сегодня", callback_data=f"adm:tops:{metric}:today"),
+                    InlineKeyboardButton("Вчера", callback_data=f"adm:tops:{metric}:yesterday"),
+                    InlineKeyboardButton("7 дней", callback_data=f"adm:tops:{metric}:7d"),
                 ],
                 [
-                    InlineKeyboardButton("30 ", callback_data=f"adm:tops:{metric}:30d"),
-                    InlineKeyboardButton(" ", callback_data=f"adm:tops:{metric}:all"),
+                    InlineKeyboardButton("30 дней", callback_data=f"adm:tops:{metric}:30d"),
+                    InlineKeyboardButton("Все", callback_data=f"adm:tops:{metric}:all"),
                 ],
                 [InlineKeyboardButton("⬇ CSV", callback_data=f"adm:tops_csv:{metric}:{period}")],
                 [InlineKeyboardButton("Назад", callback_data="adm:panel")],
@@ -643,7 +712,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if data == "adm:users":
         conn = get_conn()
         total = conn.execute("SELECT COUNT(*) AS cnt FROM users").fetchone()["cnt"]
-        lines = [f" : {total}"]
+        lines = ["👥 Пользователи", f"Всего: {total}", ""]
         rows = conn.execute(
             "SELECT user_id, username, last_seen FROM users ORDER BY last_seen DESC LIMIT 10"
         ).fetchall()
@@ -652,7 +721,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         conn.close()
         keyboard = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("   /ID", callback_data="adm:user:search")],
+                [InlineKeyboardButton("Поиск по @username/ID", callback_data="adm:user:search")],
                 [InlineKeyboardButton("Назад", callback_data="adm:panel")],
             ]
         )
@@ -662,7 +731,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     if data == "adm:user:search":
         set_state(context, "admin_user_search")
-        await query.edit_message_text("  (@username)  ID :")
+        await query.edit_message_text("Введите @username или ID:")
         await query.answer()
         return
 
@@ -686,6 +755,36 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await query.answer()
         return
 
+    if data == "adm:queue:clear":
+        keyboard = InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("Очистить", callback_data="adm:queue:clear_confirm")],
+                [InlineKeyboardButton("Назад", callback_data="adm:queue")],
+            ]
+        )
+        await query.edit_message_text("Очистить очередь?", reply_markup=keyboard)
+        await query.answer()
+        return
+
+    if data == "adm:queue:clear_confirm":
+        conn = get_conn()
+        if not is_admin(conn, query.from_user.id):
+            conn.close()
+            await query.answer(ui("no_access"), show_alert=True)
+            return
+        conn.execute(
+            "UPDATE queue_numbers SET status='canceled', completed_at = ? WHERE status IN ('queued','taken')",
+            (now_ts(),),
+        )
+        conn.commit()
+        conn.close()
+        log_admin_action(query.from_user.id, query.from_user.username, "queue_clear", "status in queued,taken -> canceled")
+        await query.edit_message_text("Очередь очищена.", reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Назад", callback_data="adm:queue")]]
+        ))
+        await query.answer("")
+        return
+
     if data == "adm:payouts":
         conn = get_conn()
         if not is_admin(conn, query.from_user.id):
@@ -695,7 +794,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         conn.close()
         set_state(context, "admin_payout_user")
         await query.edit_message_text(
-            " @username  ID   :",
+            "Введите @username или ID для выплаты:",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="adm:panel")]]),
         )
         await query.answer()
@@ -709,13 +808,13 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if not lunch_text:
             set_state(context, "admin_lunch_text")
             await query.edit_message_text(
-                "     (   ):",
+                "Введите текст для режима обеда:",
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="adm:settings")]]),
             )
             await query.answer()
             return
-        status = "" if lunch_on else ""
-        body = lunch_text or "   ."
+        status = "ВКЛ" if lunch_on else "ВЫКЛ"
+        body = lunch_text or "Текст обеда не задан."
         keyboard = InlineKeyboardMarkup(
             [
                 [InlineKeyboardButton("Редактировать текст", callback_data="adm:lunch:edit")],
@@ -727,7 +826,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ]
         )
         await query.edit_message_text(
-            f"  \n: {status}\n\n{body}",
+            f"🍽 Расписание обеда\nСтатус: {status}\n\n{body}",
             reply_markup=keyboard,
         )
         await query.answer()
@@ -735,7 +834,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     if data == "adm:lunch:edit":
         set_state(context, "admin_lunch_text")
-        await query.edit_message_text("     :")
+        await query.edit_message_text("Введите новый текст обеда:")
         await query.answer()
         return
 
@@ -745,8 +844,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         lunch_text = get_config(conn, "lunch_text", "").strip()
         lunch_on = get_config_bool(conn, "lunch_on")
         conn.close()
-        status = "" if lunch_on else ""
-        body = lunch_text or "   ."
+        status = "ВКЛ" if lunch_on else "ВЫКЛ"
+        body = lunch_text or "Текст обеда не задан."
         keyboard = InlineKeyboardMarkup(
             [
                 [InlineKeyboardButton("Редактировать текст", callback_data="adm:lunch:edit")],
@@ -758,7 +857,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ]
         )
         await query.edit_message_text(
-            f"  \n: {status}\n\n{body}",
+            f"🍽 Расписание обеда\nСтатус: {status}\n\n{body}",
             reply_markup=keyboard,
         )
         await query.answer("")
@@ -847,11 +946,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ))
             await query.answer()
             return
-        lines = [" :"]
+        lines = ["📝 Заявки на доступ:"]
         keyboard = []
         for r in rows:
             lines.append(f"#{r['id']} | {format_user_label(r['user_id'], r['username'])}")
-            keyboard.append([InlineKeyboardButton(f"  #{r['id']}", callback_data=f"adm:req:approve:{r['id']}")])
+            keyboard.append([InlineKeyboardButton(f"Одобрить #{r['id']}", callback_data=f"adm:req:approve:{r['id']}")])
         keyboard.append([InlineKeyboardButton("Назад", callback_data="adm:settings")])
         await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard))
         await query.answer()
@@ -867,7 +966,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             conn.commit()
             log_admin_action(query.from_user.id, query.from_user.username, "approve_access_request", f"request_id={req_id}|user_id={row['user_id']}")
         conn.close()
-        await query.edit_message_text(" .", reply_markup=InlineKeyboardMarkup(
+        await query.edit_message_text("Заявка одобрена.", reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Назад", callback_data="adm:requests")]]
         ))
         await query.answer("")
@@ -885,8 +984,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             "toggle_referral",
             f"referral_enabled={'0' if current else '1'}",
         )
-        status = "" if not current else ""
-        await query.edit_message_text(f"  {status}.", reply_markup=keyboard)
+        status = "ВКЛ" if not current else "ВЫКЛ"
+        await query.edit_message_text(f"Рефералка: {status}.", reply_markup=keyboard)
         await query.answer("")
         return
 
@@ -904,11 +1003,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ))
             await query.answer()
             return
-        lines = [" :"]
+        lines = ["🆘 Поддержка: открытые тикеты"]
         keyboard = []
         for t in tickets:
             lines.append(f"#{t['id']} | {format_user_label(t['user_id'], t['username'])}")
-            keyboard.append([InlineKeyboardButton(f" #{t['id']}", callback_data=f"adm:support_reply:{t['id']}")])
+            keyboard.append([InlineKeyboardButton(f"Ответить #{t['id']}", callback_data=f"adm:support_reply:{t['id']}")])
         keyboard.append([InlineKeyboardButton("Назад", callback_data="adm:settings")])
         await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(keyboard))
         await query.answer()
@@ -917,7 +1016,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if data.startswith("adm:support_reply:"):
         ticket_id = int(parts[2])
         set_state(context, "admin_support_reply", ticket_id=ticket_id)
-        await query.edit_message_text("  :")
+        await query.edit_message_text("Введите ответ:")
         await query.answer()
         return
 
@@ -936,11 +1035,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             try:
                 await context.bot.send_message(
                     chat_id=r["user_id"],
-                    text=f"   {r['phone']} .",
+                    text=f"Номер {r['phone']} отмечен как слёт.",
                 )
             except Exception:
                 continue
-        await query.edit_message_text("     .", reply_markup=InlineKeyboardMarkup(
+        await query.edit_message_text("Слёт всем выполнен.", reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Назад", callback_data="adm:settings")]]
         ))
         await query.answer("")
@@ -951,11 +1050,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         minutes = get_config_int(conn, "auto_slip_minutes", 15)
         enabled = get_config_bool(conn, "auto_slip_on")
         conn.close()
-        status = "" if enabled else ""
+        status = "ВКЛ" if enabled else "ВЫКЛ"
         set_state(context, "admin_auto_slip")
         await query.edit_message_text(
-            f" -\n: {status}\n : {minutes} \n\n"
-            "     (0 = ):",
+            f"⚠ Авто-слёт\nСтатус: {status}\nИнтервал: {minutes} мин\n\n"
+            "Введите минуты (0 = выключить):",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="adm:settings")]]),
         )
         await query.answer()
@@ -966,11 +1065,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         minutes = get_config_int(conn, "i_am_here_minutes", 10)
         enabled = get_config_bool(conn, "i_am_here_on")
         conn.close()
-        status = "" if enabled else ""
+        status = "ВКЛ" if enabled else "ВЫКЛ"
         set_state(context, "admin_i_am_here")
         await query.edit_message_text(
-            f"  \n: {status}\n : {minutes} \n\n"
-            "     (0 = ):"
+            f"✅ Я тут\nСтатус: {status}\nИнтервал: {minutes} мин\n\n"
+            "Введите минуты (0 = выключить):"
         )
         await query.answer()
         return
@@ -981,14 +1080,14 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         set_config(conn, "use_priorities", "0" if current else "1")
         keyboard = build_settings_menu(conn)
         conn.close()
-        mode = "FIFO ( )" if current else "  "
+        mode = "FIFO" if current else "Приоритеты"
         log_admin_action(
             query.from_user.id,
             query.from_user.username,
             "switch_issue_mode",
             "use_priorities=0 (FIFO)" if current else "use_priorities=1 (priority)",
         )
-        await query.edit_message_text(f"  : {mode}", reply_markup=keyboard)
+        await query.edit_message_text(f"Режим выдачи: {mode}", reply_markup=keyboard)
         await query.answer("")
         return
 
@@ -1011,11 +1110,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         depts = conn.execute("SELECT id, name FROM departments ORDER BY id").fetchall()
         conn.close()
         if not tariff:
-            await query.edit_message_text("  .")
+            await query.edit_message_text("Тариф не найден.")
             await query.answer()
             return
         if not receptions:
-            await query.edit_message_text("     . : /num   .")
+            await query.edit_message_text("Нет приёмок для этого тарифа. Используйте /num в нужной группе.")
             await query.answer()
             return
         if len(receptions) == 1:
@@ -1023,18 +1122,18 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             hint = build_submit_hint(tariff["name"], tariff["duration_min"], tariff["price"])
             if not depts:
                 set_state(context, "submit_numbers", tariff_id=tariff_id, department_id=None, reception_chat_id=reception_chat_id)
-                await query.edit_message_text(f"{hint}\n\n   :")
+                await query.edit_message_text(f"{hint}\n\nОтправьте номера:")
                 await query.answer()
                 return
             keyboard = [[InlineKeyboardButton(d["name"], callback_data=f"user:dept:{tariff_id}:{d['id']}:{reception_chat_id}")] for d in depts]
-            await query.edit_message_text(" :", reply_markup=InlineKeyboardMarkup(keyboard))
+            await query.edit_message_text("Выберите отдел:", reply_markup=InlineKeyboardMarkup(keyboard))
             await query.answer()
             return
         keyboard = []
         for r in receptions:
             title = r["chat_title"] or str(r["chat_id"])
             keyboard.append([InlineKeyboardButton(title, callback_data=f"user:reception:{tariff_id}:{r['chat_id']}")])
-        await query.edit_message_text(" :", reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text("Выберите приёмку:", reply_markup=InlineKeyboardMarkup(keyboard))
         await query.answer()
         return
 
@@ -1049,17 +1148,17 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         depts = conn.execute("SELECT id, name FROM departments ORDER BY id").fetchall()
         conn.close()
         if not tariff:
-            await query.edit_message_text("  .")
+            await query.edit_message_text("Тариф не найден.")
             await query.answer()
             return
         hint = build_submit_hint(tariff["name"], tariff["duration_min"], tariff["price"])
         if not depts:
             set_state(context, "submit_numbers", tariff_id=tariff_id, department_id=None, reception_chat_id=reception_chat_id)
-            await query.edit_message_text(f"{hint}\n\n   :")
+            await query.edit_message_text(f"{hint}\n\nОтправьте номера:")
             await query.answer()
             return
         keyboard = [[InlineKeyboardButton(d["name"], callback_data=f"user:dept:{tariff_id}:{d['id']}:{reception_chat_id}")] for d in depts]
-        await query.edit_message_text(" :", reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text("Выберите отдел:", reply_markup=InlineKeyboardMarkup(keyboard))
         await query.answer()
         return
 
@@ -1068,7 +1167,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         dept_id = int(parts[3])
         reception_chat_id = int(parts[4]) if len(parts) > 4 else None
         if reception_chat_id is None:
-            await query.edit_message_text("  .      .")
+            await query.edit_message_text("Приёмка не выбрана. Откройте меню заново.")
             await query.answer()
             return
         conn = get_conn()
@@ -1078,12 +1177,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         ).fetchone()
         conn.close()
         if not tariff:
-            await query.edit_message_text("  .")
+            await query.edit_message_text("Тариф не найден.")
             await query.answer()
             return
         set_state(context, "submit_numbers", tariff_id=tariff_id, department_id=dept_id, reception_chat_id=reception_chat_id)
         hint = build_submit_hint(tariff["name"], tariff["duration_min"], tariff["price"])
-        await query.edit_message_text(f"{hint}\n\n   :")
+        await query.edit_message_text(f"{hint}\n\nОтправьте номера:")
         await query.answer()
         return
     if data == "user:request_access":
@@ -1094,14 +1193,14 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
         conn.commit()
         conn.close()
-        await query.edit_message_text("  .")
+        await query.edit_message_text("Заявка отправлена.")
         await query.answer("")
         return
 
     if data == "user:withdraw":
         set_state(context, "user_withdraw")
         await query.edit_message_text(
-            "   :",
+            "Введите сумму вывода:",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Главное меню", callback_data="user:home")]]),
         )
         await query.answer()
@@ -1120,7 +1219,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         row = fetch_next_queue(conn, [dept_id], reception_chat_id)
         if not row:
             conn.close()
-            await query.edit_message_text(" .")
+            await query.edit_message_text("Очередь пуста.")
             await query.answer()
             return
         conn.execute(
@@ -1180,7 +1279,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         conn.close()
         try:
             if query.message:
-                status_line = f"  ({format_msk()})"
+                status_line = f"⏭ Пропуск ({format_msk()})"
                 if query.message.photo:
                     caption = query.message.caption or ""
                     await query.message.edit_caption(
@@ -1231,9 +1330,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         conn.close()
 
         status_text = {
-            "success": " ",
-            "slip": " ",
-            "error": " ",
+            "success": "✅ Встал",
+            "slip": "⚠ Слёт",
+            "error": "❌ Ошибка",
         }.get(status, status)
         status_line = f"{status_text} ({format_msk()})"
         phone_display = format_phone(row["phone"])
@@ -1242,7 +1341,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             try:
                 await context.bot.send_message(
                     chat_id=row["user_id"],
-                    text=f"  {phone_display} {status_line}.",
+                    text=f"Ваш номер {phone_display}: {status_line}.",
                 )
             except Exception:
                 pass
@@ -1253,8 +1352,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 if status == "success":
                     keyboard = InlineKeyboardMarkup(
                         [
-                            [InlineKeyboardButton(" ", callback_data=f"q:status:slip:{row['id']}")],
-                            [InlineKeyboardButton("  ", callback_data=f"q:msg:{row['id']}")],
+                            [InlineKeyboardButton("Слёт", callback_data=f"q:status:slip:{row['id']}")],
+                            [InlineKeyboardButton("Сообщение владельцу", callback_data=f"q:msg:{row['id']}")],
                         ]
                     )
                 else:
@@ -1278,7 +1377,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 await context.bot.send_message(
                     chat_id=query.message.chat_id,
                     message_thread_id=query.message.message_thread_id,
-                    text="  ,   :",
+                    text="Номер обработан. Возьмите следующий номер:",
                     reply_markup=InlineKeyboardMarkup(
                         [[InlineKeyboardButton("Взять номер", callback_data="topic:next")]]
                     ),
