@@ -1,3 +1,20 @@
+_MOJIBAKE_CHARS = set("ЀЂЃЄЅІЇЈЉЊЋЌЍЎЏѐђѓєѕіїјљњћќѝўџ")
+
+
+def _looks_mojibake(text: str) -> bool:
+    return any(ch in _MOJIBAKE_CHARS for ch in (text or ""))
+
+
+def _fix_mojibake(text: str) -> str:
+    if not text or not _looks_mojibake(text):
+        return text
+    try:
+        fixed = text.encode("cp1251").decode("utf-8")
+    except Exception:
+        return text
+    return fixed if fixed and not _looks_mojibake(fixed) else text
+
+
 def init_db() -> None:
     conn = get_conn()
     conn.executescript(
@@ -147,6 +164,13 @@ def init_db() -> None:
             "ON CONFLICT(key) DO NOTHING",
             (key, value),
         )
+    # Автоматически чистим "кракозябры" в конфиге, если они были сохранены ранее
+    rows = conn.execute("SELECT key, value FROM config").fetchall()
+    for row in rows:
+        value = row["value"] if row["value"] is not None else ""
+        fixed = _fix_mojibake(value)
+        if fixed != value:
+            conn.execute("UPDATE config SET value = ? WHERE key = ?", (fixed, row["key"]))
     for admin_id in ENV_ADMIN_IDS:
         conn.execute(
             "INSERT INTO admins (user_id) VALUES (?) ON CONFLICT(user_id) DO NOTHING",
