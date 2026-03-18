@@ -1,4 +1,4 @@
-﻿async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_private_state(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     state = get_state(context)
     if not state:
         return
