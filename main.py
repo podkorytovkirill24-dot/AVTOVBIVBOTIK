@@ -5,7 +5,8 @@ _PAPKA_FUNKCIY = Path(__file__).resolve().parent / 'funkcii'
 
 def _zagruzit_blok(imya_fayla: str) -> None:
     put = _PAPKA_FUNKCIY / imya_fayla
-    kod = put.read_text(encoding='utf-8')
+    # utf-8-sig автоматически убирает BOM, если он случайно попал в начало файла
+    kod = put.read_text(encoding='utf-8-sig')
     exec(compile(kod, str(put), 'exec'), globals(), globals())
 
 import os
